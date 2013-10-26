@@ -126,7 +126,18 @@ Q.SmarterSprite.extend( 'Player', {
 	}
 });
 
-
+// ## Spawner
+Q.Sprite.extend('Spawner', {
+	init: function (p) {
+		this._super();
+	},
+	step: function (p) {
+		if (Math.random() * 100 < 1) {
+			this.stage.insert(new Q.Enemy({ x: Math.random() *1000, y: -200 }));
+		}
+	}
+	
+});
 
 // ## Tower Sprite
 // Sprites can be simple, the Tower sprite just sets a custom sprite sheet
@@ -178,6 +189,8 @@ Q.scene("level1",function(stage) {
                              dataAsset: 'level.tmx', //level.json
                              sheet:     'tiles' })); //png image
 
+
+var spawner = stage.insert(new Q.Spawner());
 
   // Create the player and add them to the stage
   var player = stage.insert(new Q.Player({x:300}));
