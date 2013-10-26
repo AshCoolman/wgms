@@ -1,0 +1,4 @@
+idle=0
+run=0-1
+jumpup=2
+jumpdn=3

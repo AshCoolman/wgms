@@ -30,7 +30,8 @@ Q.RIGHT= 'right';
 Q.LEFT_DIR = 1;
 Q.RIGHT_DIR= -1;
 Q.PLR = SPRITE_DATA.player;
-		
+Q.NME = SPRITE_DATA.enemy;
+Q.DIES_IN_VOID = 'diesInVoid';
 Q.frames = function (str) {
 	var arr = [],
 		words = str.split(','),
@@ -63,8 +64,10 @@ Q.Sprite.extend('SmarterSprite', {
         	vx: 0,
         	vy: 0,
         	ax: 0,
-        	ay: 0
+        	ay: 0,
+			smarterSpriteFlags:[]
       },props),defaultProps);
+		this.add('animation, 2d');
 	},
 
 	step: function (dt) {
@@ -72,20 +75,43 @@ Q.Sprite.extend('SmarterSprite', {
             this.p.flip = 'x';
         else /*if(this.p.direction == Q.RIGHT)*/ 
             this.p.flip = false;                    
-       
-		if (Q.inputs['fire'])
-			console.log(this.p);
+		this.setAnimation();
+		this.doFlags();
+	},
+	
+	doFlags: function () {
+		var p = this.p,
+			flags = p.smarterSpriteFlags;
+	
+		if (flags.indexOf(Q.DIES_IN_VOID) != -1) {
+			if (p.y > 1000) {
+				this.destroy();
+				Q.stageScene("endGame",1, { label: "You fell into the void" });
+			}
+		}
+	},
+	setAnimation: function () {
+	
+		if (this.p.vy < 0 && this.animation != 'jumpup') 
+			this.play('jumpup');
+		else if (Math.abs(this.p.vy) > 0 && this.animation != 'jumpdn')
+			this.play('jumpdn');
+		else if (this.p.vx == 0 && this.animation != 'idle') 
+			this.play('idle');
+		else if (Math.abs(this.p.vx) > 0 && this.animation != 'run')
+			this.play('run');
+		
 	}
 });
 
 Q.SmarterSprite.extend( 'Player', {
 	init: function (p) {
-		console.log('player');
 		this._super(p, {
 			sprite: 'player',
 			sheet: 'player'
 		});
-		this.add('animation, 2d, platformerControls');
+		this.p.smarterSpriteFlags.push( Q.DIES_IN_VOID);
+		this.add('2d, platformerControls');
 		this.on('hit', this, 'collision');
 		Q.input.on("action",this,"doAction");
 		this.play('idle');
@@ -111,18 +137,6 @@ Q.SmarterSprite.extend( 'Player', {
 	step: function (dt) {
 		this._super(dt);
 		this.stage.collide(this);
-		this.setAnimation();
-	},
-	setAnimation: function () {
-		
-		if (this.p.vy < 0 && this.animation != 'jumpup') 
-			this.play('jumpup')
-		else if (Math.abs(this.p.vy) > 0 && this.animation != 'jumpdn')
-			this.play('jumpdn')
-		else if (this.p.vx == 0 && this.animation != 'idle') 
-			this.play('idle')
-		else if (Math.abs(this.p.vx) > 0 && this.animation != 'run')
-			this.play('run')
 	}
 });
 
@@ -149,25 +163,18 @@ Q.Sprite.extend("Tower", {
 
 // ## Enemy Sprite
 // Create the Enemy class to add in some baddies
-Q.Sprite.extend("Enemy",{
+Q.SmarterSprite.extend("Enemy",{
   init: function(p) {
-    this._super(p, { sheet: 'enemy', vx: 100 });
-
-    // Enemies use the Bounce AI to change direction 
-    // whenver they run into something.
+    this._super(p, { sheet: 'enemy', sprite:'enemy', vx: 100 });
+	this.p.vx = 100;
+	this.p.smarterSpriteFlags.push( Q.DIES_IN_VOID);
     this.add('2d, aiBounce');
-
-    // Listen for a sprite collision, if it's the player,
-    // end the game unless the enemy is hit on top
     this.on("bump.left,bump.right,bump.bottom",function(collision) {
       if(collision.obj.isA("Player")) { 
-        Q.stageScene("endGame",1, { label: "You Died" }); 
+        Q.stageScene("endGame",1, { label: "You bumped into enemy" }); 
         collision.obj.destroy();
       }
     });
-
-    // If the enemy gets hit on the top, destroy it
-    // and give the user a "hop"
     this.on("bump.top",function(collision) {
       if(collision.obj.isA("Player")) { 
         this.destroy();
@@ -235,11 +242,10 @@ Q.scene('endGame',function(stage) {
 // Q.load can be called at any time to load additional assets
 // assets that are already loaded will be skipped
 // The callback will be triggered when everything is loaded
-Q.load(['sprites.png', 'sprites.json', 'level.tmx', 'tiles.png', 'background-wall.png', 'braid.png', Q.PLR.file].join(', '), function() {
+Q.load(['sprites.png', 'sprites.json', 'level.tmx', 'tiles.png', 'background-wall.png', 'braid.png', Q.PLR.file, Q.NME.file].join(', '), function() {
 	Q.compileSheets("sprites.png","sprites.json");
 	Q.sheet("tiles","tiles.png", { tilew: 32, tileh: 32 });
-	
-	
+	Q.sheet('enemy', Q.NME.file, { tilew: Q.NME.tilew, tileh: Q.NME.tileh });
 	Q.sheet('player', Q.PLR.file, { tilew: Q.PLR.tilew, tileh: Q.PLR.tileh });
 	Q.animations('player', {
 		run: {frames: Q.frames(Q.PLR.run), rate: 1/15},
@@ -247,6 +253,14 @@ Q.load(['sprites.png', 'sprites.json', 'level.tmx', 'tiles.png', 'background-wal
 		jumpup: {frames: Q.frames(Q.PLR.jumpup)},
 		jumpdn: {frames: Q.frames(Q.PLR.jumpdn)}
 	});
+	
+	Q.animations('enemy', {
+		run: {frames: Q.frames(Q.NME.run), rate: 1/15},
+		idle: {frames: Q.frames(Q.NME.idle)},
+		jumpup: {frames: Q.frames(Q.NME.jumpup)},
+		jumpdn: {frames: Q.frames(Q.NME.jumpdn)}
+	});
+	
 	Q.stageScene("level1");
 });
 

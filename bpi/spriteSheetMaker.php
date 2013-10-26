@@ -7,7 +7,7 @@ $destFolder = 'images/';
 $spriteData = array();
 try {
 	
-	$paths = array('bpi/sprites/player');
+	$paths = array('bpi/sprites/player', 'bpi/sprites/enemy');
 	foreach($paths as $path) {
 		$spriteName = explode('/', $path);
 		$spriteName = $spriteName[count($spriteName)-1];
