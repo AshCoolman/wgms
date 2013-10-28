@@ -52,7 +52,6 @@ Q.frames = function (str) {
 			arr.push(parseInt(word));
 		}
 	}
-	console.log('frames', str, arr)
 	return arr;
 };
 		
@@ -77,6 +76,32 @@ Q.Sprite.extend('SmarterSprite', {
             this.p.flip = false;                    
 		this.setAnimation();
 		this.doFlags();
+		this.p.oldvy = this.p.vy;
+		if (this.p.isSuperBounce) {
+			this.p.isSuperBounce = false;
+		}
+	},
+	
+	doStomp: function (col) {
+		var bouncev = Math.min(-300, -this.p.oldvy * 0.65);
+		this.p.vy = bouncev;
+		if (bouncev != -300) {
+			console.log('super stomp', bouncev);
+			this.p.isSuperBounce = true;
+			console.log(this.stage.viewport);
+			this.stage.viewport.offsetY = -20;
+			setTimeout(function (me) {
+				return function () {
+					me.stage.viewport.offsetY = 0;
+				}
+			}(this), 80);
+			
+		}
+	},
+	
+	collision: function (col) {
+		console.log('player col')
+		this._super(col);
 	},
 	
 	doFlags: function () {
@@ -91,8 +116,8 @@ Q.Sprite.extend('SmarterSprite', {
 		}
 	},
 	setAnimation: function () {
-	
-		if (this.p.vy < 0 && this.animation != 'jumpup') 
+		
+		if (this.p.vy < 0 && this.animation != 'jumpup' ) 
 			this.play('jumpup');
 		else if (Math.abs(this.p.vy) > 0 && this.animation != 'jumpdn')
 			this.play('jumpdn');
@@ -169,16 +194,33 @@ Q.SmarterSprite.extend("Enemy",{
 	this.p.vx = 100;
 	this.p.smarterSpriteFlags.push( Q.DIES_IN_VOID);
     this.add('2d, aiBounce');
-    this.on("bump.left,bump.right,bump.bottom",function(collision) {
+    this.on("bump.left",function(collision, event) {
       if(collision.obj.isA("Player")) { 
-        Q.stageScene("endGame",1, { label: "You bumped into enemy" }); 
+		console.log('left', collision, event)
+        Q.stageScene("endGame",1, { label: "You bumped into enemy left" }); 
+        collision.obj.destroy();
+      }
+    });
+	
+    this.on("bump.right",function(collision, event) {
+      if(collision.obj.isA("Player")) { 
+		console.log('right', collision, event)
+        Q.stageScene("endGame",1, { label: "You bumped into enemy right" }); 
+        collision.obj.destroy();
+      }
+    });
+	
+    this.on("bump.bottom",function(collision, event) {
+      if(collision.obj.isA("Player")) { 
+		console.log('bottom', collision, event)
+        Q.stageScene("endGame",1, { label: "You bumped into enemy bottom" }); 
         collision.obj.destroy();
       }
     });
     this.on("bump.top",function(collision) {
       if(collision.obj.isA("Player")) { 
         this.destroy();
-        collision.obj.p.vy = -300;
+        collision.obj.doStomp(collision);
       }
     });
   }
@@ -197,18 +239,18 @@ Q.scene("level1",function(stage) {
                              sheet:     'tiles' })); //png image
 
 
-var spawner = stage.insert(new Q.Spawner());
+  //var spawner = stage.insert(new Q.Spawner());
 
   // Create the player and add them to the stage
-  var player = stage.insert(new Q.Player({x:300}));
+  var player = stage.insert(new Q.Player({x:740, y:-140}));
 
   // Give the stage a moveable viewport and tell it
   // to follow the player.
   stage.add("viewport").follow(player);
 
   // Add in a couple of enemies
-  stage.insert(new Q.Enemy({ x: 700, y: 0 }));
-  stage.insert(new Q.Enemy({ x: 800, y: 0 }));
+  stage.insert(new Q.Enemy({ x: 760, y: 30, vx:0, gravity:0.5 }));
+  stage.insert(new Q.Enemy({ x: 430, y: -100, vx:0, gravity:0.5 }));
 
   // Finally add in the tower goal
   stage.insert(new Q.Tower({ x: 180, y: 50 }));
