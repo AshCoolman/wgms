@@ -44,7 +44,7 @@ if (!$IS_DEPLOY) {
 				sort($filesInLevel);
 				foreach($filesInLevel as $file) {
 					//echo "<br/>$lvl: $file";
-					echo "<script src=\"$file\"></script>";
+					echo "<script src=\"$file\"></script>\n";
 				}
 			}
 		}

@@ -1,7 +1,7 @@
 // ## Level1 scene
 // Create a new scene called level 1
-Q.scene("level1", function(stage) {
-
+Q.scene("level1", function(stage) { 
+	Q.stageScene('UI', 2);
 	// Add in a repeater for a little parallax action
 	stage.insert(new Q.Repeater({
 		asset: "background-wall.png",
@@ -15,8 +15,7 @@ Q.scene("level1", function(stage) {
 		//level.json
 		sheet: 'tiles'
 	})); //png image
-
-	//var spawner = stage.insert(new Q.Spawner());
+ 
 	// Create the player and add them to the stage
 	var player = stage.insert(new Q.Player({
 		x: 740,
@@ -46,12 +45,14 @@ Q.scene("level1", function(stage) {
 		x: 180,
 		y: 50
 	}));
+
 });
 
 // To display a game over / game won popup box, 
 // create a endGame scene that takes in a `label` option
 // to control the displayed message.
 Q.scene('endGame', function(stage) {
+	
 	var container = stage.insert(new Q.UI.Container({
 		x: Q.width / 2,
 		y: Q.height / 2,
@@ -79,4 +80,20 @@ Q.scene('endGame', function(stage) {
 	// Expand the container to visibily fit it's contents
 	// (with a padding of 20 pixels)
 	container.fit(20);
+});
+
+
+// To display a game over / game won popup box, 
+// create a endGame scene that takes in a `label` option
+// to control the displayed message.
+Q.scene('UI', function(stage) {
+	var timer = new Q.Timer();
+	timer.start();
+	if (true) {
+		stage.insert( new Q.Clock({
+			x: Q.width-60, 
+			y: 20
+		}));
+	}
+
 });
