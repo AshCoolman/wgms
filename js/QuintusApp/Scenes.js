@@ -1,6 +1,10 @@
 // ## Level1 scene
 // Create a new scene called level 1
-Q.scene("level1", function(stage) { 
+Q.scene("level1", function(stage) { 	
+	var timer = new Q.Timer();
+	timer.start();
+	Q.state.set('timer', timer);
+	
 	Q.stageScene('UI', 2);
 	// Add in a repeater for a little parallax action
 	stage.insert(new Q.Repeater({
@@ -53,6 +57,7 @@ Q.scene("level1", function(stage) {
 // to control the displayed message.
 Q.scene('endGame', function(stage) {
 	
+	Q.state.get('timer').pause();
 	var container = stage.insert(new Q.UI.Container({
 		x: Q.width / 2,
 		y: Q.height / 2,
@@ -87,8 +92,6 @@ Q.scene('endGame', function(stage) {
 // create a endGame scene that takes in a `label` option
 // to control the displayed message.
 Q.scene('UI', function(stage) {
-	var timer = new Q.Timer();
-	timer.start();
 	if (true) {
 		stage.insert( new Q.Clock({
 			x: Q.width-60, 
